@@ -242,7 +242,7 @@ public class Roster {
     /**
      This method will display the roster in last name, first name, and DOB order.
      */
-    public void print () {
+    public String print () {
         //sorting by last name first name, DOB
         String schoolFilter = "all";
         sortDefault(schoolFilter);
@@ -253,8 +253,7 @@ public class Roster {
                 string += roster[i] + "\n";
             }
         } else {
-            System.out.println("Student roster is empty!");
-            return;
+            return "Student roster is empty!";
         }
 
         if(!string.equals("")){
@@ -262,14 +261,15 @@ public class Roster {
         } else {
             string = "";
         }
-        System.out.println("* Student roster sorted by last name, first name, DOB **");
-        System.out.println(string);
-        System.out.println("* end of roster **");
+        String headline = "* Student roster sorted by last name, first name, DOB **";
+        //System.out.println(string);
+        String footer = "* end of roster **";
+        return headline + "\n" + string + "\n" + footer + "\n";
     } //print roster sorted by profiles
     /**
      This method will display the roster in school and major order.
      */
-    public void printBySchoolMajor() {
+    public String printBySchoolMajor() {
         sortSchool();
         String string = "";
         if(roster != null) {
@@ -277,17 +277,18 @@ public class Roster {
                 string += roster[i] + "\n";
             }
         } else {
-            System.out.println("Student roster is empty!");
-            return;
+            return "Student roster is empty!";
         }
         if(!string.equals("")){
             string = string.substring(0, string.length() - 1) ;
         } else {
             string = "";
         }
-        System.out.println("* Student roster sorted by school, major **");
-        System.out.println(string);
-        System.out.println("* end of roster **");
+        String header = "* Student roster sorted by school, major **";
+        String footer = "* end of roster **";
+
+        return header + "\n" + string + "\n" + footer + "\n";
+
     } //print roster sorted by school major
     /**
      This method will display the roster in increasing academic standing order.
