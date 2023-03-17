@@ -6,7 +6,10 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
 
 public class TuitionManagerController {
 
@@ -53,6 +56,26 @@ public class TuitionManagerController {
     @FXML
     private Button loadButton;
     @FXML
+    private TextField enrollFirstName;
+    @FXML
+    private TextField enrollLastName;
+    @FXML
+    private DatePicker enrollDOB;
+    @FXML
+    private TextField enrollCreds;
+    @FXML
+    private TextField schFirstName;
+    @FXML
+    private TextField schLastName;
+    @FXML
+    private DatePicker schDate;
+    @FXML
+    private TextField scholarship;
+    @FXML
+    private Button enroll;
+    @FXML
+    private Button drop;
+    @FXML
     private HBox states;
     @FXML
     private TextArea displayArea;
@@ -65,6 +88,7 @@ public class TuitionManagerController {
     private static final int NY_INDEX = 1;
 
     Roster roster = new Roster();
+    Enrollment enrollment = new Enrollment();
 
     @FXML
     void toggleStatus(ActionEvent e) {
@@ -172,20 +196,14 @@ public class TuitionManagerController {
         for(Node child : majorBox.getChildren()) {
             RadioButton radioButton = (RadioButton) child;
             if(radioButton.isSelected()) {
-                switch(i) {
-                    case CS_INDEX:
-                        return Major.CS;
-                    case ITI_INDEX:
-                        return Major.ITI;
-                    case BAIT_INDEX:
-                        return Major.BAIT;
-                    case EE_INDEX:
-                        return Major.EE;
-                    case MATH_INDEX:
-                        return Major.MATH;
-                    default:
-                        return Major.CS; //default, should never execute though
-                }
+                return switch (i) {
+                    case CS_INDEX -> Major.CS;
+                    case ITI_INDEX -> Major.ITI;
+                    case BAIT_INDEX -> Major.BAIT;
+                    case EE_INDEX -> Major.EE;
+                    case MATH_INDEX -> Major.MATH;
+                    default -> Major.CS; //default, should never execute though
+                };
             }
             i++;
         }
@@ -201,5 +219,176 @@ public class TuitionManagerController {
     private void printBySchool(){
         displayArea.setText(roster.printBySchoolMajor());
     }
+    @FXML
+    private void printByStanding(){
+        displayArea.setText(roster.printByStanding());
+    }
 
+    @FXML
+    private void printInRBS(){
+        displayArea.setText(roster.printInSchool("RBS"));
+    }
+
+    @FXML
+    private void printInSAS(){
+        displayArea.setText(roster.printInSchool("SAS"));
+    }
+
+    @FXML
+    private void printInSCII(){
+        displayArea.setText(roster.printInSchool("SC&I"));
+    }
+
+    @FXML
+    private void printInSOE(){
+        displayArea.setText(roster.printInSchool("SOE"));
+    }
+
+    @FXML
+    private void changeMajor(){
+        String firstName = rosterFirstName.getText();
+        String lastName = rosterLastName.getText();
+        Date date = new Date(rosterDOB.getValue().format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+        Major major = getMajorFromRadioButton();
+
+        Profile profile = new Profile(firstName, lastName, date);
+        if(!roster.changeMajor(profile, major)){
+            displayArea.setText("Can't find the given student");
+            return;
+        }
+        displayArea.setText("Major changed Successfully!");
+    }
+
+    @FXML
+    private void enrollStudent(){
+        String firstName = enrollFirstName.getText();
+        String lastName = enrollLastName.getText();
+        Date date = new Date(enrollDOB.getValue().format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+        int creds;
+        try {
+            creds = Integer.parseInt(enrollCreds.getText());
+        } catch (NumberFormatException e) {
+            displayArea.setText("Credits completed invalid: not an integer!");
+            return;
+        }
+
+        Profile profile = new Profile(firstName, lastName, date);
+        EnrollStudent enrollStudent = new EnrollStudent(profile, creds);
+
+
+        displayArea.setText(enrollment.add(enrollStudent));
+    }
+
+    @FXML
+    private void dropStudent(){
+        String firstName = enrollFirstName.getText();
+        String lastName = enrollLastName.getText();
+        Date date = new Date(enrollDOB.getValue().format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+
+        Profile profile = new Profile(firstName, lastName, date);
+
+        if(!enrollment.contains(profile)){
+            displayArea.setText("the student is not in enrollment. ");
+            return;
+        }
+        enrollment.remove(enrollment.getEnrollStudent(profile));
+        displayArea.setText(profile + "removed from enrollment. ");
+    }
+
+    @FXML
+    private void applyScholarship(){
+        String firstName = schFirstName.getText();
+        String lastName = schLastName.getText();
+        Date date = new Date(schDate.getValue().format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+        int scholar;
+        try {
+            scholar = Integer.parseInt(scholarship.getText());
+        } catch (NumberFormatException e) {
+            displayArea.setText("Amount entered invalid: not an integer!");
+            return;
+        }
+
+        Profile profile = new Profile(firstName, lastName, date);
+        if(!roster.contains(profile)){
+            displayArea.setText("This profile doesn't exist in the roster. ");
+            return;
+        }
+        if(roster.getStudent(profile) instanceof Resident resident){
+            resident.setScholarship(scholar);
+            displayArea.setText("Successfully Applied Scholarship");
+        }
+        else{
+            displayArea.setText("Cannot apply scholarship to a non-resident");
+        }
+    }
+
+    @FXML
+    private void printEnrollment(){
+        displayArea.setText(enrollment.print());
+    }
+
+    @FXML
+    private void printTuitionDue(){
+        displayArea.setText(enrollment.printTuition(roster));
+    }
+
+    @FXML
+    private void semEnd(){
+        displayArea.setText(enrollment.semesterEnd(roster));
+    }
+
+    @FXML
+    public void loadStudents() throws FileNotFoundException {
+        Scanner scanner = new Scanner(new File("studentList.txt"));
+        displayArea.setText("");
+        while(scanner.hasNextLine())
+        {
+            String studentLine = scanner.nextLine();
+            String[] studentParameters = studentLine.split(",");
+            String firstName = studentParameters[1];
+            String lastName = studentParameters[2];
+            Date date = new Date(studentParameters[3]);
+            Major major;
+            try {
+                major = Major.valueOf(studentParameters[4].toUpperCase());
+            } catch (IllegalArgumentException e) {
+                displayArea.setText(displayArea.getText() + "Major code invalid: " + studentParameters[4].toUpperCase());
+                return;
+            }
+            int creds;
+            try {
+                creds = Integer.parseInt(studentParameters[5]);
+            } catch (NumberFormatException e) {
+                displayArea.setText(displayArea.getText() + "Credits completed invalid: not an integer!");
+                return;
+            }
+            Profile profile = new Profile(firstName, lastName, date);
+            if(roster.contains(profile)){
+                displayArea.setText(displayArea.getText() + profile + " is already in the roster.");
+                return;
+            }
+            switch (studentParameters[0]) {
+                case "R" -> {
+                    Resident newResident = new Resident(profile, major, creds);
+                    roster.add(newResident);
+                }
+                case "N" -> {
+                    NonResident newNonResident = new NonResident(profile, major, creds);
+                    roster.add(newNonResident);
+                }
+                case "T" -> {
+                    String state = getStateFromRadioButton();
+                    TriState newTriState = new TriState(profile, major, creds, state);
+                    roster.add(newTriState);
+                }
+                case "I" -> {
+                    boolean studyAb = studyAbroad.isSelected();
+                    International newInternational = new International(profile, major, creds, studyAb);
+                    roster.add(newInternational);
+                }
+            }
+            displayArea.setText(displayArea.getText() + "\n" + profile + " added to the roster.");
+        }
+        displayArea.setText(displayArea.getText() + "\n" + "All students loaded to the roster.");
+    }
 }

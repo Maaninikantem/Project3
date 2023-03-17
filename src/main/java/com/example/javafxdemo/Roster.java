@@ -9,13 +9,13 @@ public class Roster {
     private int size;
     /**
      This method will change a student's major in the roster.
-     @param student the student to change the major for.
+     @param profile the student to change the major for.
      @param newMajor the major to change to.
      @return true if the student exists.
      */
-    public boolean changeMajor(Student student, Major newMajor){
-        if (contains(student)){
-            int studentIndex = find(student);
+    public boolean changeMajor(Profile profile, Major newMajor){
+        if (contains(profile)){
+            int studentIndex = find(profile);
             roster[studentIndex].setMajor(newMajor);
             return true;
         }
@@ -29,6 +29,15 @@ public class Roster {
     private int find(Student student) {
         for(int i = 0; i< size; i++){
             if(roster[i].equals(student)){
+                return i;
+            }
+        }
+        return -1;
+    } //search the given student in roster
+
+    public int find(Profile profile) {
+        for(int i = 0; i< size; i++){
+            if(roster[i].getProfile().equals(profile)){
                 return i;
             }
         }
@@ -293,7 +302,7 @@ public class Roster {
     /**
      This method will display the roster in increasing academic standing order.
      */
-    public void printByStanding() {
+    public String printByStanding() {
         sortStanding();
         String string = "";
         if(roster != null) {
@@ -301,23 +310,23 @@ public class Roster {
                 string += roster[i] + "\n";
             }
         } else {
-            System.out.println("Student roster is empty!");
-            return;
+            return "Student roster is empty!";
         }
         if(!string.equals("")){
             string = string.substring(0, string.length() - 1) ;
         } else {
             string = "";
         }
-        System.out.println("* Student roster sorted by standing **");
-        System.out.println(string);
-        System.out.println("* end of roster **");
+        String header = "* Student roster sorted by standing **";
+        String footer = "* end of roster **";
+        return header + "\n" + string + "\n" + footer + "\n";
     } //print roster sorted by standing
+
     /**
      This method will list the students in a specific school in last name, first name, and DOB order.
      @param schoolName the school to display students from.
      */
-    public void printInSchool(String schoolName){
+    public String printInSchool(String schoolName){
         sortDefault(schoolName);
 
         String string = "";
@@ -328,20 +337,21 @@ public class Roster {
                 }
             }
         } else {
-            System.out.println("Student roster is empty!");
-            return;
+            return "Student roster is empty!";
+
         }
 
         if(!string.equals("")){
             string = string.substring(0, string.length() - 1) ;
         } else {
-            System.out.println("School doesn't exist: " + schoolName);
-            return;
+            return "No students in registered in " + schoolName;
+
         }
-        System.out.println("* Students in " + schoolName + " **");
-        System.out.println(string);
-        System.out.println("* end of list **");
+        String header = "* Students in " + schoolName + " **";
+        String footer = "* end of list **";
+        return header + "\n" + string + "\n" + footer + "\n";
     }
+
     /*
     public static void main(String[] args){
         Roster roster = new Roster();

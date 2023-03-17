@@ -26,22 +26,23 @@ public class Enrollment {
      @param enrollStudent the student to add.
      */
 
-    public void add(EnrollStudent enrollStudent){
-        if(contains(enrollStudent.getProfile())){
+    public String add(EnrollStudent enrollStudent) {
+        if (contains(enrollStudent.getProfile())) {
             int indexOfStudent = findProfile(enrollStudent.getProfile());
             enrollStudents[indexOfStudent].setCreditsEnrolled(enrollStudent.getCreditsEnrolled());
-            return;
+        } else {
+            int rosterIncrement = 4;
+            if (enrollStudents == null) {
+                enrollStudents = new EnrollStudent[rosterIncrement];
+            }
+            if (size >= enrollStudents.length) {
+                grow();
+            }
+            enrollStudents[size] = enrollStudent;
+            size++;
+            return enrollStudent.toString();
         }
-        int rosterIncrement = 4;
-        if(enrollStudents == null){
-            enrollStudents = new EnrollStudent[rosterIncrement];
-        }
-        if(size >= enrollStudents.length){
-            grow();
-        }
-        enrollStudents[size] = enrollStudent;
-        size++;
-        System.out.println(enrollStudent);
+        return "Student already enrolled";
     }
 
     //move the last one in the array to replace the deleting index position
@@ -114,11 +115,10 @@ public class Enrollment {
      * this method is used to print the list of enrolledStudents in the list so far, based on their profiles, credits enrolled
      * this method prints the list without sorting them in any particular order
      */
-    public void print() {
+    public String print() {
         String print = "";
         if (size == 0) {
-            System.out.println("Enrollment is empty!");
-            return;
+            return "Enrollment is empty!";
         }
 
         print += "* Enrollment **\n";
@@ -126,19 +126,18 @@ public class Enrollment {
         for (int i = 0; i < size; i++) {
             print += enrollStudents[i].getProfile() + ": credits enrolled: " + enrollStudents[i].getCreditsEnrolled() + "\n";
         }
-        System.out.print(print);
-        System.out.println("* end of enrollment **");
+        String footer = "* end of enrollment **";
+        return print + "\n" + footer + "\n";
     }//print the array as is without sorting
 
     /**
      * This method prints the enrolledStudents tuition due based on their status and the credits they are taking
      * @param roster takes the students from the roster and if they are in the enroll list, it will display the tuition due
      */
-    public void printTuition(Roster roster) {
+    public String printTuition(Roster roster) {
         String print = "";
         if (size == 0) {
-            System.out.println("Student roster is empty!");
-            return;
+            return "Student roster is empty!";
         }
 
         print += "* Tuition due **\n";
@@ -146,8 +145,9 @@ public class Enrollment {
         for (int i = 0; i < size; i++) {
             print += enrollStudents[i].printTuition(roster) + "\n";
         }
-        System.out.print(print);
-        System.out.println("* end of tuition due **");
+        String footer = "* end of tuition due **";
+        return print + "\n" + footer + "\n";
+
     }
 
     /**
@@ -155,7 +155,7 @@ public class Enrollment {
      * then prints out all the students who have finished the credits over 120 and are eligible for graduation
      * @param roster
      */
-    public void semesterEnd(Roster roster){
+    public String semesterEnd(Roster roster){
         for(int i = 0; i < size; i++) {
             EnrollStudent currEnrollStudent = enrollStudents[i];
             Profile currentProfile = currEnrollStudent.getProfile();
@@ -164,7 +164,7 @@ public class Enrollment {
                 roster.getStudent(currentProfile).addCredits(creds);
             }
         }
-        printSemEnd(roster);
+        return printSemEnd(roster);
     }
 
     /**
@@ -172,12 +172,11 @@ public class Enrollment {
      * this method is then called on the semesterEnd method
      * @param roster it takes in the roster's student instance and prints the students based on the credits completed
      */
-    public void printSemEnd(Roster roster){
+    public String printSemEnd(Roster roster){
 
             String print = "";
             if (size == 0) {
-                System.out.println("Enrollment is empty!");
-                return;
+                return "Enrollment is empty!";
             }
 
             print += "** list of students eligible for graduation **\n";
@@ -193,8 +192,9 @@ public class Enrollment {
                 }
 
             }
-            System.out.print(print);
-            System.out.println("* end of list **");
+            String footer =  "* end of list **";
+            return print + "\n" + footer + "\n";
+
         }
 }
 
